@@ -7,8 +7,11 @@ export const InfoStaking = {
     idl: require('./staking.json'),
     rewardToken: new PublicKey("6YTEx36MonaAwcaMciu7KAzx1zdUkQBmHrxLTkKMq98C"),
     rewardDecimals: 9,
-    collection: new PublicKey('drq1T2iYdF37KS8Qgj8xFzULrjMAC6EsFS8sJM9mPGj')
+    collection: new PublicKey('drq1T2iYdF37KS8Qgj8xFzULrjMAC6EsFS8sJM9mPGj'),
+    totalSupply: 6
 }
+
+export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s')
 
 export const confirmOptions: ConfirmOptions = {commitment : 'finalized',preflightCommitment : 'finalized',skipPreflight : false}
 

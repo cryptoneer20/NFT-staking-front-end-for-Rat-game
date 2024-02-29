@@ -1,12 +1,12 @@
 import { FC, useCallback, useMemo, ReactNode } from 'react';
 import { ProgramContext } from './useProgram'
-import { InfoStaking, confirmOptions } from './constants'
+import { InfoStaking, METADATA_PROGRAM_ID, confirmOptions } from './constants'
 import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import * as anchor from "@project-serum/anchor";
-import { PublicKey, SYSVAR_CLOCK_PUBKEY, SystemProgram, TransactionInstruction } from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, createAssociatedTokenAccountInstruction} from '@solana/spl-token'
-import { sendTransactionWithRetry } from './utility';
-import { Metaplex } from '@metaplex-foundation/js'
+import { Keypair, PublicKey, SYSVAR_CLOCK_PUBKEY, SystemProgram, TransactionInstruction } from '@solana/web3.js'
+import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token} from '@solana/spl-token'
+import { sendTransactionWithRetry, sendTransactions } from './utility';
+import { Metadata, MasterEdition } from '@metaplex-foundation/mpl-token-metadata'
 
 export interface ProgramProviderProps{
     children : ReactNode
@@ -15,13 +15,13 @@ export interface ProgramProviderProps{
 export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
     const wallet = useWallet()
     const {publicKey} = useWallet()
+    
     const {connection: conn} = useConnection()
     
-    const [program, metaplex] = useMemo(()=>{
+    const [program] = useMemo(()=>{
         const provider = new anchor.AnchorProvider(conn, wallet as any, confirmOptions)
         const program =  new anchor.Program(InfoStaking.idl, InfoStaking.programId, provider)
-        const metaplex = Metaplex.make(conn)
-        return [program, metaplex]
+        return [program]
     },[conn, wallet])
 
     const getPoolData = async() => {
@@ -49,18 +49,16 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
                 try{
                     const tokenAmount = tokenAccount.account.data.parsed.info.tokenAmount;
                     if(tokenAmount.amount === "1" && tokenAmount.decimals === 0){
-                        let nftMint = new PublicKey(tokenAccount.account.data.parsed.info.mint) 
-                        let metadata = await metaplex.nfts().findByMint({mintAddress: nftMint})
-                        if(metadata.creators.findIndex(function(a){return a.address.toBase58()==InfoStaking.collection.toBase58() && a.verified==true})!=-1){
-                            allTokens.push({
-                                mint: nftMint,
-                                account: tokenAccount.pubkey,
-                                metadata: metadata
-                            })
+                        let nftMint = new PublicKey(tokenAccount.account.data.parsed.info.mint)
+                        let pda = await Metadata.getPDA(nftMint)
+                        let edition = await MasterEdition.getPDA(nftMint)
+                        const accountInfo = (await conn.getAccountInfo(pda))!;
+                        let metadata: any = new Metadata(pda, accountInfo).data.data
+                        if(metadata.creators.findIndex(function(a: any){return a.address==InfoStaking.collection.toBase58() && a.verified==1})!=-1){
+                            allTokens.push({mint: nftMint, account: tokenAccount.pubkey, metadataAddress: pda, editionAddress: edition, metadata: metadata})
                         }
                     }
                 }catch(err){
-
                 }
             }
             allTokens.sort(function(a: any, b: any){
@@ -70,6 +68,7 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
             })
             return allTokens
         }catch(err){
+            console.log(err)
             return []
         }
     }
@@ -89,14 +88,17 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
             let poolData = await getPoolData()
             for(let nftAccount of resp){
                 let stakedNft = await program.account.stakingData.fetch(nftAccount.pubkey) as any
+                console.log(stakedNft)
                 if(stakedNft.isStaked === false) continue;
                 try{
-                    let metadata = await metaplex.nfts().findByMint(stakedNft.nftMint)
+                    let pda = await Metadata.getPDA(stakedNft.nftMint)
+					const accountInfo: any = await conn.getAccountInfo(pda);
+					let metadata = new Metadata(pda, accountInfo).data.data
                     let time = new Date().getTime()/1000
-                    let earnedWithIt = poolData.rewardAmount * Math.floor((time - stakedNft.stakeTime.toNumber() + 30)/poolData.rewardPeriod - stakedNft.claimNumber.toNumber())
+                    let earnedWithIt = 0
                     allTokens.push({stakingData: stakedNft, stakingDataAddress: nftAccount.pubkey, earned: earnedWithIt>0 ? earnedWithIt : 0, metadata: metadata})
                 }catch(err){
-
+                    console.log(err)
                 }
             }
             allTokens.sort(function(a: any, b: any){
@@ -104,97 +106,123 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
                 if(a.metadata.name > b.metadata.name) return -1
                 return 0
             })
+            console.log(allTokens)
             return allTokens
         }catch(err){
+            console.log(err)
             return []
         }
     }
 
-    const stakeNft = useCallback(async(item: any) => {
+    const stakeNfts = useCallback(async(items: any[]) => {
         let address = publicKey!
-        let instruction: TransactionInstruction[] = []
-        let [stakingData, ] = PublicKey.findProgramAddressSync([item.mint.toBuffer(), InfoStaking.pool.toBuffer()], InfoStaking.programId)
-        if((await conn.getAccountInfo(stakingData))==null){
-            instruction.push(program.instruction.initStakingData({
+        let instructions: TransactionInstruction[][] = []
+        let signers: Keypair[][] = []
+        for(let item of items){
+            let instruction: TransactionInstruction[] = []
+            let [stakingData, ] = PublicKey.findProgramAddressSync([item.mint.toBuffer(), InfoStaking.pool.toBuffer()], InfoStaking.programId)
+            if((await conn.getAccountInfo(stakingData))==null){
+                instruction.push(program.instruction.initStakingData({
+                    accounts:{
+                        payer: address,
+                        pool: InfoStaking.pool,
+                        nftMint: item.mint,
+                        metadata: item.metadataAddress,
+                        edition: item.editionAddress,
+                        stakingData: stakingData,
+                        systemProgram: SystemProgram.programId
+                    }
+                }))
+            }
+            instruction.push(program.instruction.stakeNft({
                 accounts:{
-                    payer: address,
+                    staker: address,
                     pool: InfoStaking.pool,
-                    nftMint: item.mint,
-                    metadata: item.metadata.address,
-                    
                     stakingData: stakingData,
-                    systemProgram: SystemProgram.programId
+                    nftAccount: item.account,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    clock: SYSVAR_CLOCK_PUBKEY
                 }
             }))
+            instructions.push(instruction)
+            signers.push([])
         }
-        instruction.push(program.instruction.stakeNft({
-            accounts:{
-                staker: address,
-                pool: InfoStaking.pool,
-                stakingData: stakingData,
-                nftAccount: item.account,
-                tokenProgram: TOKEN_PROGRAM_ID,
-                clock: SYSVAR_CLOCK_PUBKEY
-            }
-        }))
-        await sendTransactionWithRetry(conn, wallet, instruction, [])
+        await sendTransactions(conn, wallet, instructions, signers)
     }, [wallet])
 
-    const lockNft = useCallback(async(item: any) => {
+    const lockNfts = useCallback(async(items: any) => {
         let address = publicKey!
-        let instruction: TransactionInstruction[] = []
-        instruction.push(program.instruction.lockNft({
-            accounts:{
-                staker: address,
-                pool: InfoStaking.pool,
-                stakingData: item.stakingDataAddress,
-                clock: SYSVAR_CLOCK_PUBKEY
-            }
-        }))
-        await sendTransactionWithRetry(conn, wallet, instruction, [])
+        let instructions: TransactionInstruction[][] = []
+        let signers: Keypair[][] = []
+        for(let item of items){
+            let instruction: TransactionInstruction[] = []
+            instruction.push(program.instruction.lockNft({
+                accounts:{
+                    staker: address,
+                    pool: InfoStaking.pool,
+                    stakingData: item.stakingDataAddress,
+                    clock: SYSVAR_CLOCK_PUBKEY
+                }
+            }))
+            instructions.push(instruction)
+            signers.push([])
+        }
+        await sendTransactions(conn, wallet, instructions, signers)
     }, [wallet])
 
-    const unstakeNft = useCallback(async(item: any) => {
+    const unstakeNfts = useCallback(async(items: any[]) => {
         let address = publicKey!
-        let instruction: TransactionInstruction[] = []
-        let tokenFrom = getAssociatedTokenAddressSync(InfoStaking.rewardToken, InfoStaking.pool, true)
-        let tokenTo = getAssociatedTokenAddressSync(InfoStaking.rewardToken, address, true)
-        if((await conn.getAccountInfo(tokenTo))==null)
-            instruction.push(createAssociatedTokenAccountInstruction(address, tokenTo, address, InfoStaking.rewardToken))
-        instruction.push(program.instruction.unstakeNft({
-            accounts:{
-                staker: address,
-                pool: InfoStaking.pool,
-                stakingData: item.stakingDataAddress,
-                nftAccount: item.stakingData.nftAccount,
-                tokenProgram: TOKEN_PROGRAM_ID,
-                tokenFrom: tokenFrom,
-                tokenTo: tokenTo,
-                clock: SYSVAR_CLOCK_PUBKEY
-            }
-        }))
-        await sendTransactionWithRetry(conn, wallet, instruction, [])
+        let instructions: TransactionInstruction[][] = []
+        let signers: Keypair[][] = []
+        for(let item of items){
+            let instruction: TransactionInstruction[] = []
+            let tokenFrom = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, InfoStaking.rewardToken, InfoStaking.pool, true)
+            let tokenTo = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, InfoStaking.rewardToken, address, true)
+            if((await conn.getAccountInfo(tokenTo))==null)
+                instruction.push(Token.createAssociatedTokenAccountInstruction(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, InfoStaking.rewardToken, tokenTo, address, address))
+            instruction.push(program.instruction.unstakeNft({
+                accounts:{
+                    staker: address,
+                    pool: InfoStaking.pool,
+                    stakingData: item.stakingDataAddress,
+                    nftAccount: item.stakingData.nftAccount,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    tokenFrom: tokenFrom,
+                    tokenTo: tokenTo,
+                    clock: SYSVAR_CLOCK_PUBKEY
+                }
+            }))
+            instructions.push(instruction)
+            signers.push([])
+        }
+        await sendTransactions(conn, wallet, instructions, signers)
     }, [wallet])
 
-    const claim = useCallback(async(item: any) => {
+    const claim = useCallback(async(items: any[]) => {
         let address = publicKey!
-        let instruction: TransactionInstruction[] = []
-        let tokenFrom = getAssociatedTokenAddressSync(InfoStaking.rewardToken,InfoStaking.pool,true)
-        let tokenTo = getAssociatedTokenAddressSync(InfoStaking.rewardToken,address,true)
-        if((await conn.getAccountInfo(tokenTo))==null)
-            instruction.push(createAssociatedTokenAccountInstruction(ASSOCIATED_TOKEN_PROGRAM_ID,TOKEN_PROGRAM_ID,InfoStaking.rewardToken,tokenTo,address,address))
-        instruction.push(program.instruction.claimReward({
-            accounts:{
-                staker: address,
-                pool: InfoStaking.pool,
-                stakingData: item.stakingDataAddress,
-                tokenFrom: tokenFrom,
-                tokenTo: tokenTo,
-                tokenProgram: TOKEN_PROGRAM_ID,
-                clock: SYSVAR_CLOCK_PUBKEY
-            }
-        }))
-        await sendTransactionWithRetry(conn, wallet, instruction, [])
+        let instructions: TransactionInstruction[][] = []
+        let signers: Keypair[][] = []
+        for(let item of items){
+            let instruction: TransactionInstruction[] = []
+            let tokenFrom = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, InfoStaking.rewardToken, InfoStaking.pool, true)
+            let tokenTo = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, InfoStaking.rewardToken, address, true)
+            if((await conn.getAccountInfo(tokenTo))==null)
+                instruction.push(Token.createAssociatedTokenAccountInstruction(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, InfoStaking.rewardToken, tokenTo, address, address))
+            instruction.push(program.instruction.claimReward({
+                accounts:{
+                    staker: address,
+                    pool: InfoStaking.pool,
+                    stakingData: item.stakingDataAddress,
+                    tokenFrom: tokenFrom,
+                    tokenTo: tokenTo,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    clock: SYSVAR_CLOCK_PUBKEY
+                }
+            }))
+            instructions.push(instruction)
+            signers.push([])
+        }
+        await sendTransactions(conn, wallet, instructions, signers)
     },[wallet])
 
     return <ProgramContext.Provider value={{
@@ -202,8 +230,9 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
         getNftsForOwner,
         getStakedNftsForOwner,
 
-        stakeNft,
-        unstakeNft,
+        stakeNfts,
+        unstakeNfts,
+        lockNfts,
         claim,
     }}>{children}</ProgramContext.Provider>
 }

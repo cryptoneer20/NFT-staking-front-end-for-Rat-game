@@ -10,6 +10,10 @@ import { ProgramProvider } from './utils/ProgramProvider';
 import NftStake from "./pages/stake";
 import { clusterApiUrl } from "@solana/web3.js";
 
+import './bootstrap.min.css';
+import 'antd/dist/reset.css';
+import './assets/style.scss'
+
 function App() {
   const network = WalletAdapterNetwork.Devnet
   const endpoint = clusterApiUrl('devnet')

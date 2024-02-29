@@ -1,46 +1,26 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
-import { InfoStaking, openNotification } from '../utils/constants'
-import { useProgram } from '../utils/useProgram'
 
-export default function StakedNftCard(props: any){
-    const {unstakeNft, claim} = useProgram()
+export default function StakedNftCard(props : any){
     const [nftDetailInfo, setNftDetailInfo] = useState<any>(null)
 
     useEffect(()=>{
         getNftDetailInfo()
-    },[])
+    }, [])
 
     const getNftDetailInfo = async() => {
-        let data = (await axios.get(props.nft.metadata.uri)).data
+        let data = (await axios.get(props.data.metadata.uri)).data
         setNftDetailInfo(data)
     }
 
-    return <div className="card board-purple my-3 mx-4 w-full justify-self-stretch" style={{width : "150px"}}>
-        <div style={{height : "150px"}}>
+    return <div className='nft' onClick={()=>{props.callbackFunc(props.data.stakingDataAddress)}}>
         {
             nftDetailInfo!=null &&
-                <img className="card-img-top image-disable" src={nftDetailInfo.image} alt="NFT" />
+            <>
+                <img className={props.data.selected ? "red-border" : "normal-border"} src={nftDetailInfo.image} alt="Penguin"  />
+                <p style={{color : props.data.selected ? "red" : "#e9ffc5"}}>{nftDetailInfo.name}</p>
+            </>
         }
-        </div>
-        <div className="w-full text-center bottom-0">{props.nft.metadata.name}</div>
-        <div className="grid justify-items-left my-2">
-            <button type="button" className="mx-1 px-5 pb-2 pt-1 button-bg text-gray-200 rounded-lg transition duration-150" onClick={async ()=>{
-                try{
-                    await unstakeNft(props.nft)
-                    openNotification('success', "Unstaked successfully")
-                }catch(err: any){
-                    openNotification('error',err.message)
-                }
-            }}>Untake</button>
-            <button type="button" className="mx-1 px-2 pb-2 pt-1 button-bg text-gray-200 rounded-lg transition duration-150" onClick={async ()=>{
-                try{
-                    await claim(props.nft)
-                    openNotification('success', "Claim successfully")
-                }catch(err: any){
-                    openNotification('error',err.message)
-                }
-            }}>Claim</button>
-        </div>
+        <p style={{color : props.data.selected ? "red" : "#e9ffc5"}}>$HIT | {props.data.earned}</p>
     </div>
 }

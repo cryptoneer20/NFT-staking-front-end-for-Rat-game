@@ -6,9 +6,10 @@ export interface ProgramContextState{
     getNftsForOwner(owner: PublicKey) : Promise<any[]>;
     getStakedNftsForOwner(owner: PublicKey) : Promise<any[]>;
 
-    stakeNft(item: any) : Promise<void>;
-    unstakeNft(item: any) : Promise<void>;
-    claim(item: any) : Promise<void>;
+    stakeNfts(items: any[]) : Promise<void>;
+    unstakeNfts(items: any[]) : Promise<void>;
+    lockNfts(items: any[]): Promise<void>
+    claim(items: any[]) : Promise<void>;
 }
 
 export const ProgramContext = createContext<ProgramContextState>({
