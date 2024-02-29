@@ -7,7 +7,7 @@ import NftCard from "../components/NftCard"
 import StakedNftCard from "../components/StakedNftCard"
 
 export default function NftStake(){
-    const {getNftsForOwner, getStakedNftsForOwner, getNftPoolData} = useProgram()
+    const {getNftsForOwner, getStakedNftsForOwner, getPoolData} = useProgram()
     const {publicKey} = useWallet()
     
     const [poolData, setPoolData] = useState<any>(null)
@@ -20,19 +20,16 @@ export default function NftStake(){
     // const [stakedPageCount , setStakedPageCount] = useState(0)
 
     useEffect(()=>{
-        getPoolData()
+        getStakingPoolData()
     },[])
 
     useEffect(()=>{
-        const interval = setInterval(()=>{getPoolData()}, 10000)
+        const interval = setInterval(()=>{getStakingPoolData()}, 10000)
         return ()=>clearInterval(interval)
     },[])
 
-    const getPoolData = async() => {
-        let pool = await getNftPoolData()
-        if(pool!=null) setPoolData({
-            totalNfts: pool.totalNumber.toNumber()
-        })
+    const getStakingPoolData = async() => {
+        setPoolData(await getPoolData())
     }
 
     useEffect(()=>{
@@ -59,10 +56,6 @@ export default function NftStake(){
             setStakedNfts([])
     }
 
-    // const handlePageClick = (e : any) => {
-    // };
-    // const handleStakedPageClick = (e: any) => {
-    // }
     const onOptionChangeHandler = (e: any) => {
         setShowCollection(e.target.value)
         // let badge = 0
@@ -120,44 +113,18 @@ export default function NftStake(){
                     !showStaked ?
                         <div className="w-full flex flex-wrap justify-center">
                             {
-                                ownedNfts.filter(function(item: any){return showCollection==="All" || InfoStaking.reward[item.badge].badge===showCollection}).map((nft : any, idx : any) => {
+                                ownedNfts.map((nft : any, idx : any) => {
                                     return <NftCard key={idx} nft={nft}/>
                                 })
                             }
-                            <div className='w-full grid justify-items-stretch custom-font text-12px'>
-                                <div className="flex justify-self-end">
-                                    <select onChange={onOptionChangeHandler} 
-                                        className="text-gray-100 text-center back-red rounded-md shadow-sm outline-none h-8 my-2 text-12px" >
-                                        <option >All</option>
-                                        {
-                                            InfoStaking.reward.map((item, idx) => 
-                                                <option key={idx} value={item.badge}>{item.badge}</option>
-                                            )
-                                        }
-                                    </select>
-                                </div>
-                            </div>
                         </div>
                     :
                         <div className="w-full flex flex-wrap justify-center">
                             {
-                                stakedNfts.filter(function(item: any){return showCollection==="All" || InfoStaking.reward[item.stakingData.badge].badge===showCollection}).map((nft : any ,idx : any)=>{
+                                stakedNfts.map((nft : any ,idx : any)=>{
                                     return <StakedNftCard key={idx} nft={nft}/>
                                 })
                             }
-                            <div className='w-full grid justify-items-stretch custom-font text-12px'>
-                                <div className="flex justify-self-end">
-                                    <select onChange={onOptionChangeHandler} 
-                                        className="text-gray-100 text-center back-red rounded-md shadow-sm outline-none h-8 my-2 text-12px" >
-                                        <option >All</option>
-                                        {
-                                            InfoStaking.reward.map((item, idx) => 
-                                                <option key={idx} value={item.badge}>{item.badge}</option>
-                                            )
-                                        }
-                                    </select>
-                                </div>
-                            </div>
                         </div>
                 }
                 </div>                    

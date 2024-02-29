@@ -23,7 +23,6 @@ export default function NftCard(props: any){
                 <img className="card-img-top image-disable" src={nftDetailInfo.image} alt="NFT" />
         }
         </div>
-        <div className="w-full text-center bottom-0">{InfoStaking.reward[props.nft.badge].badge}</div>
         <div className="w-full text-center bottom-0">{props.nft.metadata.name}</div>
         <div className="grid justify-items-left my-2">
             <button type="button" className="mx-1 px-5 pb-2 pt-1 button-bg text-gray-200 rounded-lg transition duration-150" onClick={async ()=>{

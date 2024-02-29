@@ -2,7 +2,7 @@ import { createContext, useContext } from "react";
 import { PublicKey } from '@solana/web3.js';
 
 export interface ProgramContextState{
-    getNftPoolData() : Promise<any>;
+    getPoolData() : Promise<any>;
     getNftsForOwner(owner: PublicKey) : Promise<any[]>;
     getStakedNftsForOwner(owner: PublicKey) : Promise<any[]>;
 
