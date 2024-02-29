@@ -24,6 +24,47 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
         return [program]
     },[conn, wallet])
 
+    const getTokenAmount = async() => {
+		try{
+			if(publicKey!=null){
+				const tokenAccount = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID,TOKEN_PROGRAM_ID, InfoStaking.rewardToken, publicKey)
+				if(await conn.getAccountInfo(tokenAccount)){
+					let resp : any = (await conn.getTokenAccountBalance(tokenAccount)).value
+					return Number(resp.uiAmount)
+				}
+            }
+            return 0
+		}catch(err){
+			return 0
+		}
+	}
+
+    const getRewardAmount = async(poolData: any, item: any) => {
+        try{
+            let currentTime = new Date().getTime() / 1000
+            const lockStatus = item.lockStatus
+            const claimTime = item.claimTime.toNumber()
+            const lockTime = item.lockTime.toNumber()
+            const decimals = 10**InfoStaking.rewardDecimals
+            if(lockStatus==0 && lockStatus==2)
+                return poolData.rewardAmount / decimals * (currentTime - claimTime) / poolData.rewardPeriod
+            else if(claimTime < lockTime){
+                if(lockTime + poolData.lockDuration > currentTime)
+                    return (poolData.rewardAmount / decimals * (lockTime - claimTime) + poolData.rewardAmountForLock / decimals * (currentTime - lockTime)) / poolData.rewardPeriod
+                else
+                    return (poolData.rewardAmount / decimals * (currentTime - claimTime - poolData.lockDuration) + poolData.rewardAmountForLock / decimals * poolData.lockDuration) / poolData.rewardPeriod
+            }else if(claimTime < lockTime + poolData.lockDuration){
+                if(lockTime+poolData.lockDuration > currentTime)
+                    return poolData.rewardAmountForLock / decimals * (currentTime - claimTime) / poolData.rewardPeriod
+                else
+                    return (poolData.rewardAmountForLock / decimals * (lockTime + poolData.lockDuration - claimTime) + poolData.rewardAmount / decimals * (currentTime - lockTime - poolData.lockDuration)) / poolData.rewardPeriod
+            }
+            return poolData.rewardAmount / decimals * (currentTime - claimTime) / poolData.rewardPeriod
+        }catch(err){
+            return 0
+        }
+    }
+
     const getPoolData = async() => {
         try{
             let poolData = await program.account.pool.fetch(InfoStaking.pool) as any
@@ -68,7 +109,6 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
             })
             return allTokens
         }catch(err){
-            console.log(err)
             return []
         }
     }
@@ -88,7 +128,6 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
             let poolData = await getPoolData()
             for(let nftAccount of resp){
                 let stakedNft = await program.account.stakingData.fetch(nftAccount.pubkey) as any
-                console.log(stakedNft)
                 if(stakedNft.isStaked === false) continue;
                 try{
                     let pda = await Metadata.getPDA(stakedNft.nftMint)
@@ -98,7 +137,6 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
                     let earnedWithIt = 0
                     allTokens.push({stakingData: stakedNft, stakingDataAddress: nftAccount.pubkey, earned: earnedWithIt>0 ? earnedWithIt : 0, metadata: metadata})
                 }catch(err){
-                    console.log(err)
                 }
             }
             allTokens.sort(function(a: any, b: any){
@@ -106,10 +144,8 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
                 if(a.metadata.name > b.metadata.name) return -1
                 return 0
             })
-            console.log(allTokens)
             return allTokens
         }catch(err){
-            console.log(err)
             return []
         }
     }
@@ -225,7 +261,22 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
         await sendTransactions(conn, wallet, instructions, signers)
     },[wallet])
 
+    const updatePoolProperties = useCallback(async(rewardAmount: number, rewardAmountForLock: number) => {
+        let address = publicKey!;
+        let poolData = await getPoolData()
+        let instructions : TransactionInstruction[] = []
+        instructions.push(program.instruction.updatePoolProperties(new anchor.BN(poolData.rewardPeriod), new anchor.BN(rewardAmount * (10**InfoStaking.rewardDecimals)), new anchor.BN(rewardAmountForLock * (10**InfoStaking.rewardDecimals)), new anchor.BN(poolData.lockDuration), poolData.collection, {
+            accounts:{
+                owner: address,
+                pool: InfoStaking.pool,
+            }
+        }))
+        await sendTransactionWithRetry(conn, wallet, instructions, [])
+    }, [wallet])
+
     return <ProgramContext.Provider value={{
+        getTokenAmount,
+        getRewardAmount,
         getPoolData,
         getNftsForOwner,
         getStakedNftsForOwner,
@@ -234,5 +285,7 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
         unstakeNfts,
         lockNfts,
         claim,
+
+        updatePoolProperties
     }}>{children}</ProgramContext.Provider>
 }

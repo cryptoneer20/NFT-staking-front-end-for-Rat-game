@@ -7,21 +7,23 @@ import StakedNftCard from "../components/StakedNftCard"
 import { CircularProgress } from '@mui/material';
 
 import BACKGROUND from '../assets/images/background.png'
-import MAIN_LOGO from '../assets/images/main_logo.png'
-import PENGUIN from '../assets/images/content-header.png'
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui"
 import { PublicKey } from "@solana/web3.js"
 
 export default function NftStake(){
-    const {getNftsForOwner, getStakedNftsForOwner, getPoolData, stakeNfts, unstakeNfts, claim} = useProgram()
+    const {getTokenAmount, getRewardAmount, getNftsForOwner, getStakedNftsForOwner, getPoolData, stakeNfts, unstakeNfts, lockNfts, claim} = useProgram()
     const {publicKey} = useWallet()
     
     const [poolData, setPoolData] = useState<any>(null)
     const [ownedNfts, setOwnedNfts] = useState<any[]>([])
     const [stakedNfts, setStakedNfts] = useState<any[]>([])
+    const [rewardAmounts, setRewardAmounts] = useState<number[]>([])
+    const [totalRewardAmount, setTotalRewardAmount] = useState(0)
 
     const [isNftLoading, setIsNftLoading] = useState(false)
 	const [isStakedNftLoading, setIsStakedNftLoading] = useState(false)
+
+    const [ownedTokenAmount, setOwnedTokenAmount] = useState(0)
 
     useEffect(()=>{
         getStakingPoolData()
@@ -39,8 +41,22 @@ export default function NftStake(){
     useEffect(()=>{
         getOwnedNfts()
         getStakedNfts()
+        getOwnedTokenAmount()
     },[publicKey])
+    
+    useEffect(()=>{
+        const interval = setInterval(()=>{getOwnedTokenAmount()}, 10000)
+        return ()=>clearInterval(interval)
+    },[publicKey])
+    
+    useEffect(()=>{
+        getRewardAmounts()
+    }, [stakedNfts])
 
+    useEffect(()=>{
+        const interval = setInterval(()=>{getRewardAmounts()}, 1000)
+        return ()=>clearInterval(interval)
+    },[stakedNfts])
 
     const handleSelectNft = (nft : PublicKey) => {
 		setOwnedNfts(ownedNfts.map((item)=>{
@@ -50,6 +66,7 @@ export default function NftStake(){
 			return item
 		}))
 	}
+
     const handleSelectStakeNft = (nft : PublicKey) => {
 		setStakedNfts(stakedNfts.map((item)=>{
 			if(item.stakingDataAddress.toBase58()===nft.toBase58()){
@@ -80,6 +97,22 @@ export default function NftStake(){
             setStakedNfts([])
         setIsStakedNftLoading(false)
     }
+
+    const getOwnedTokenAmount = async() => {
+        setOwnedTokenAmount(Math.floor(await getTokenAmount() * 100) / 100)
+    }
+
+    const getRewardAmounts = async() => {
+        let allAmounts = []
+        let total = 0
+        for(let item of stakedNfts){
+            let amount = Math.floor(await getRewardAmount(poolData, item.stakingData) * 100) / 100
+            allAmounts.push(amount)
+            total += amount
+        }
+        setRewardAmounts(allAmounts)
+        setTotalRewardAmount(Math.floor(total *100) / 100)
+    }
     
     return <div className="main">
         <div className='main-background'>
@@ -87,7 +120,7 @@ export default function NftStake(){
         </div>
         <div className='back-group'>
             <div className='main-logo'>
-                <img src={MAIN_LOGO} width="120px" alt="Logo"></img>
+                <div style={{height: "100px"}}/>
                 <div className='wallet-position'><WalletMultiButton></WalletMultiButton></div>
             </div>
             <div className='progress'>
@@ -102,18 +135,18 @@ export default function NftStake(){
                             WALLET
                         </div>
                         <div className='main-panel-header-value'>
-                            <span className='main-panel-header-amount'>{0}</span> $HIT
+                            <span className='main-panel-header-amount'>{ownedTokenAmount}</span> $RAT
                         </div>
                     </div>
                     <div className='main-panel-content'>
-                        <div className='main-panel-content-header'>
+                        {/* <div className='main-panel-content-header'>
                             <div>
                                 <img src={PENGUIN} alt="penguin header" onClick={async()=>{
                                     if(publicKey!=null)
                                         await getNftsForOwner(publicKey)
                                 }}></img>
                             </div>
-                        </div>
+                        </div> */}
                         <hr></hr>
                         <div className='main-panel-content-body'>
                         {
@@ -134,7 +167,12 @@ export default function NftStake(){
                         <div className="wrap-stake">
                             <button className='btn btn-stake' onClick={async()=>{
                                 try{
-                                    await stakeNfts(ownedNfts.filter(function(item){return item.selected==true}))
+                                    let items = ownedNfts.filter(function(item){return item.selected==true})
+                                    if(items.length==0){
+                                        openNotification('warning', "You didn't select any NFT(s)")
+                                        return;
+                                    }
+                                    await stakeNfts(items)
                                     openNotification('success', 'Stake success')
                                     await getPoolData()
                                     getOwnedNfts()
@@ -147,6 +185,10 @@ export default function NftStake(){
                         <div className='wrap-stake'>
                             <button className='btn btn-stake-all' onClick={async()=>{
                                 try{
+                                    if(ownedNfts.length==0){
+                                        openNotification('warning', "You don't have NFTs you can stake")
+                                        return;
+                                    }
                                     await stakeNfts(ownedNfts)
                                     openNotification('success', 'Stake success')
                                     await getPoolData()
@@ -165,18 +207,18 @@ export default function NftStake(){
                             EARNED
                         </div>
                         <div className='main-panel-header-value'>
-                            <span className='main-panel-header-amount'>{0}</span> $HIT
+                            <span className='main-panel-header-amount'>{totalRewardAmount}</span> $RAT
                         </div>
                     </div>
                     <div className='main-panel-content'>
-                        <div className='main-panel-content-header'>
+                        {/* <div className='main-panel-content-header'>
                             <div>
                                 <img src={PENGUIN} alt="penguin header" onClick={async()=>{
                                     if(publicKey!=null)
                                         await getStakedNftsForOwner(publicKey)
                                 }}></img>
                             </div>
-                        </div>
+                        </div> */}
                         <hr></hr>
                         <div className='main-panel-content-body'>
                         {
@@ -186,7 +228,7 @@ export default function NftStake(){
                                 <div className="nft-panel-content">
                                 {
                                     stakedNfts.map((item, idx)=>{
-                                        return <StakedNftCard key={idx} data={item} callbackFunc={handleSelectStakeNft}></StakedNftCard>
+                                        return <StakedNftCard key={idx} data={item} lockStatus={item.stakingData.lockStatus==1 && item.stakingData.lockTime.toNumber()+poolData.lockDuration>(new Date().getTime()/1000)} rewardAmount={rewardAmounts[idx]} callbackFunc={handleSelectStakeNft}></StakedNftCard>
                                     })
                                 }
                                 </div>
@@ -197,7 +239,13 @@ export default function NftStake(){
                         <div className='wrap-unstake'>
                             <button className='btn btn-unstake' onClick={async()=>{
                                 try{
-                                    await unstakeNfts(stakedNfts.filter(function(item){return item.selected==true}))
+                                    let currentTime = new Date().getTime() / 1000
+                                    let items = stakedNfts.filter(function(item){return item.selected==true && !(item.stakingData.lockStatus==1 && item.stakingData.lockTime.toNumber()+poolData.lockDuration>currentTime)})
+                                    if(items.length==0){
+                                        openNotification('warning', "You didn't select correct NFT(s) to unstake")
+                                        return
+                                    }
+                                    await unstakeNfts(items)
                                     openNotification('success', 'Unstake success')
                                     await getPoolData()
                                     getOwnedNfts()
@@ -210,7 +258,13 @@ export default function NftStake(){
                         <div className='wrap-unstake'>
                             <button className='btn btn-unstake-all' onClick={async()=>{
                                 try{
-                                    await unstakeNfts(stakedNfts)
+                                    let currentTime = new Date().getTime() / 1000
+                                    let items = stakedNfts.filter(function(item){return !(item.stakingData.lockStatus==1 && item.stakingData.lockTime.toNumber()+poolData.lockDuration>currentTime)})
+                                    if(items.length==0){
+                                        openNotification('warning', "You don't have correct NFT(s) you can unstake")
+                                        return;
+                                    }
+                                    await unstakeNfts(items)
                                     openNotification('success', 'Unstake success')
                                     await getPoolData()
                                     getOwnedNfts()
@@ -223,6 +277,10 @@ export default function NftStake(){
                         <div className='wrap-unstake'>
                             <button className='btn btn-claim' onClick={async()=>{
                                 try{
+                                    if(stakeNfts.length==0){
+                                        openNotification('warning', "You don't have staked NFTs")
+                                        return
+                                    }
                                     await claim(stakedNfts)
                                     openNotification('success', 'Claim success')
                                     await getPoolData()
@@ -231,6 +289,42 @@ export default function NftStake(){
                                     openNotification('error', 'Claim failed')
                                 }
                             }}>Claim</button>
+                        </div>
+                    </div>
+                    <div className='main-panel-actions'>
+                        <div className='wrap-unstake'>
+                            <button className='btn btn-unstake' onClick={async()=>{
+                                try{
+                                    let items = stakedNfts.filter(function(item){return item.selected==true && item.stakingData.lockStatus==0})
+                                    if(items.length==0){
+                                        openNotification('warning', "You didn't select correct NFT(s) to lock")
+                                        return;
+                                    }
+                                    await lockNfts(items)
+                                    openNotification('success', 'Unstake success')
+                                    await getPoolData()
+                                    getStakedNfts()
+                                }catch(err){
+                                    openNotification('error', 'Unstake failed')
+                                }
+                            }}>LOCK</button>
+                        </div>
+                        <div className='wrap-unstake'>
+                            <button className='btn btn-unstake-all' onClick={async()=>{
+                                try{
+                                    let items = stakedNfts.filter(function(item){return item.stakingData.lockStatus==0})
+                                    if(items.length==0){
+                                        openNotification('warning', "You don't have correct NFT(s) you can lock")
+                                        return;
+                                    }
+                                    await lockNfts(items)
+                                    openNotification('success', 'Unstake success')
+                                    await getPoolData()
+                                    getStakedNfts()
+                                }catch(err){
+                                    openNotification('error', 'Unstake failed')
+                                }
+                            }}>LOCK ALL</button>
                         </div>
                     </div>
                 </div>

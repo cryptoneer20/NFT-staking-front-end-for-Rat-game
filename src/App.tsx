@@ -1,5 +1,6 @@
 
 import { useMemo } from "react";
+import {Route, Routes, BrowserRouter as Router} from 'react-router-dom'
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletModalProvider, } from '@solana/wallet-adapter-react-ui';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
@@ -8,6 +9,7 @@ import '@solana/wallet-adapter-react-ui/styles.css'
 
 import { ProgramProvider } from './utils/ProgramProvider';
 import NftStake from "./pages/stake";
+import AdminPage from "./pages/admin";
 import { clusterApiUrl } from "@solana/web3.js";
 
 import './bootstrap.min.css';
@@ -28,7 +30,12 @@ function App() {
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
           <ProgramProvider>
-            <NftStake/>
+            <Router>
+              <Routes>
+                <Route path="/" element={<NftStake/>}/>
+                <Route path="/admin" element={<AdminPage/>}/>
+              </Routes>
+            </Router>
           </ProgramProvider>
         </WalletModalProvider>
       </WalletProvider>

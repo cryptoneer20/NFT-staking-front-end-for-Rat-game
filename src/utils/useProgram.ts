@@ -2,6 +2,8 @@ import { createContext, useContext } from "react";
 import { PublicKey } from '@solana/web3.js';
 
 export interface ProgramContextState{
+    getTokenAmount() : Promise<number>;
+    getRewardAmount(poolData: any, item: any) : Promise<number>;
     getPoolData() : Promise<any>;
     getNftsForOwner(owner: PublicKey) : Promise<any[]>;
     getStakedNftsForOwner(owner: PublicKey) : Promise<any[]>;
@@ -10,6 +12,8 @@ export interface ProgramContextState{
     unstakeNfts(items: any[]) : Promise<void>;
     lockNfts(items: any[]): Promise<void>
     claim(items: any[]) : Promise<void>;
+
+    updatePoolProperties(rewardAmount: number, rewardAmountForLock: number) : Promise<void>;
 }
 
 export const ProgramContext = createContext<ProgramContextState>({

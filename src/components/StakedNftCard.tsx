@@ -13,14 +13,17 @@ export default function StakedNftCard(props : any){
         setNftDetailInfo(data)
     }
 
-    return <div className='nft' onClick={()=>{props.callbackFunc(props.data.stakingDataAddress)}}>
+    return <div className='nft' onClick={()=>{
+        if(!props.lockStatus)
+            props.callbackFunc(props.data.stakingDataAddress)
+    }}>
         {
             nftDetailInfo!=null &&
             <>
-                <img className={props.data.selected ? "red-border" : "normal-border"} src={nftDetailInfo.image} alt="Penguin"  />
-                <p style={{color : props.data.selected ? "red" : "#e9ffc5"}}>{nftDetailInfo.name}</p>
+                <img className={props.lockStatus ? "lock-border" : props.data.selected ? "red-border" : "normal-border"} src={nftDetailInfo.image} alt="Penguin"  />
+                <p style={{color : "#e9ffc5"}}>{nftDetailInfo.name + (props.lockStatus ? "   :   Locked" : props.data.stakingData.lockStatus > 0 ? " : Once locked before" : "")}</p>
             </>
         }
-        <p style={{color : props.data.selected ? "red" : "#e9ffc5"}}>$HIT | {props.data.earned}</p>
+        <p style={{color : "#e9ffc5"}}>$RAT | {props.rewardAmount}</p>
     </div>
 }

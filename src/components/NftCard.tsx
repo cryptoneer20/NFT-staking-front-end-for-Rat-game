@@ -18,7 +18,7 @@ export default function NftCard(props : any){
             nftDetailInfo!=null &&
             <>
                 <img className={props.data.selected ? "red-border" : "normal-border"} src={nftDetailInfo.image} alt="Penguin"/>
-                <p style={{color : props.data.selected ? "red" : "#e9ffc5"}}>{nftDetailInfo.name}</p>
+                <p style={{color : "#e9ffc5"}}>{nftDetailInfo.name}</p>
             </>
         }
     </div>
