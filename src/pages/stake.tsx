@@ -277,7 +277,7 @@ export default function NftStake(){
                         <div className='wrap-unstake'>
                             <button className='btn btn-claim' onClick={async()=>{
                                 try{
-                                    if(stakeNfts.length==0){
+                                    if(stakedNfts.length==0){
                                         openNotification('warning', "You don't have staked NFTs")
                                         return
                                     }

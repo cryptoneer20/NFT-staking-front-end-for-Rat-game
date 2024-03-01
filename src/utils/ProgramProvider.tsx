@@ -261,11 +261,11 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
         await sendTransactions(conn, wallet, instructions, signers)
     },[wallet])
 
-    const updatePoolProperties = useCallback(async(rewardAmount: number, rewardAmountForLock: number) => {
+    const updatePoolProperties = useCallback(async(rewardPeriod: number, rewardAmount: number, rewardAmountForLock: number, lockDuration: number) => {
         let address = publicKey!;
         let poolData = await getPoolData()
         let instructions : TransactionInstruction[] = []
-        instructions.push(program.instruction.updatePoolProperties(new anchor.BN(poolData.rewardPeriod), new anchor.BN(rewardAmount * (10**InfoStaking.rewardDecimals)), new anchor.BN(rewardAmountForLock * (10**InfoStaking.rewardDecimals)), new anchor.BN(poolData.lockDuration), poolData.collection, {
+        instructions.push(program.instruction.updatePoolProperties(new anchor.BN(rewardPeriod), new anchor.BN(rewardAmount * (10**InfoStaking.rewardDecimals)), new anchor.BN(rewardAmountForLock * (10**InfoStaking.rewardDecimals)), new anchor.BN(lockDuration), poolData.collection, {
             accounts:{
                 owner: address,
                 pool: InfoStaking.pool,
