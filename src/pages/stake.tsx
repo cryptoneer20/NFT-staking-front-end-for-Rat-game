@@ -128,12 +128,12 @@ export default function NftStake(){
                 <div className='wallet-position'><WalletMultiButton></WalletMultiButton></div>
             </div>
             <div className='penguin-title'>
-                <h1 className="title">SAGA RATS</h1>
-                <p className="description">Connect your wallet. Select the saga rats that you want to be staked. Click "STAKE" in other to stake the selected ones or "STAKE ALL" if you don't want to bother. That's it now you are earning some valuable $RAT!!!</p>
+                <h1 className="title">SAGA RATS ALPHA</h1>
+                <p className="description">Connect your wallet. Select the Saga Rats that you want to stake then click "STAKE" to stake it, otherwise, click "STAKE ALL" to stake all at once. That's it! Now you are earning some valuable $FOOD!!!</p>
             </div>
             <div className='progress'>
                 <div className="progress-bar" role="progressbar"  aria-valuemin={0} aria-valuemax={100} style={{width: (100*(poolData==null ? 0 : poolData.totalNumber)/InfoStaking.totalSupply)+"%", fontFamily:"Arial"}}>
-                    {(100*(poolData==null ? 0 : poolData.totalNumber)/InfoStaking.totalSupply)+"% staked"}
+                    {"Saga Rats Supply "+(100*(poolData==null ? 0 : poolData.totalNumber)/InfoStaking.totalSupply)+"% staked"}
                 </div>
             </div>
             <div className='row'>
@@ -339,7 +339,7 @@ export default function NftStake(){
             </div>
         </div>
         <div className='footer'>
-            <div>Saga Rats @2024 All Rights Reserved </div>
+            <div>Saga Rats Alpha @2024 All Rights Reserved </div>
             <div>
                 <a href="https://twitter.com/sagarats24" target="_blank"><img className="twitter-link" src={TWITTER_IMG_Light} width="32px" alt="Twitter"></img></a>
                 <a href="https://discord.com/invite/6jXEEye3Y4" target="_blank"><img className="twitter-link" src={DISCORD_IMG} width="32px" alt="Twitter"></img></a>
