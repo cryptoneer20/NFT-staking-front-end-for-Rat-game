@@ -53,7 +53,7 @@ export default function AdminPage(){
                 <h2 id="parent-modal-title">Administrator Panel</h2>
                 {
                     poolData!=null &&
-                    <p id="parent-modal-description">Current reward amount is {poolData.rewardAmount / (10**InfoStaking.rewardDecimals)} $RAT per {poolData.rewardPeriod}sec for normal NFT and {poolData.rewardAmountForLock / (10**InfoStaking.rewardDecimals)} $RAT per {poolData.rewardPeriod}sec for locked NFT. And lock period is {poolData.lockDuration}sec so you can get {poolData.lockDuration/poolData.rewardPeriod*poolData.rewardAmountForLock/10**InfoStaking.rewardDecimals} $RAT in LOCK time.</p>
+                    <p id="parent-modal-description">Current reward amount is {poolData.rewardAmount / (10**InfoStaking.rewardDecimals)} $FOOD per {poolData.rewardPeriod}sec for normal NFT and {poolData.rewardAmountForLock / (10**InfoStaking.rewardDecimals)} $FOOD per {poolData.rewardPeriod}sec for locked NFT. And lock period is {poolData.lockDuration}sec so you can get {poolData.lockDuration/poolData.rewardPeriod*poolData.rewardAmountForLock/10**InfoStaking.rewardDecimals} $FOOD in LOCK time.</p>
                 }
                 <div className="input-group mb-1">
                     <span className="input-group-text">Period</span>
@@ -63,12 +63,12 @@ export default function AdminPage(){
                 <div className="input-group mb-1">
                     <span className="input-group-text">Reward Amount</span>
                     <input name="reward amount"  type="text" className="form-control" onChange={(event)=>{setRewardAmount(event.target.value)}} value={rewardAmount}/>
-                    <span className="input-group-text">$RAT</span>
+                    <span className="input-group-text">$FOOD</span>
                 </div>
                 <div className="input-group mb-1">
                     <span className="input-group-text">Reward Amount for Lock</span>
                     <input name="reward amount for lock"  type="text" className="form-control" onChange={(event)=>{setRewardAmountForLock(event.target.value)}} value={rewardAmountForLock}/>
-                    <span className="input-group-text">$RAT</span>
+                    <span className="input-group-text">$FOOD</span>
                 </div>
                 <div className="input-group mb-1">
                     <span className="input-group-text">Lock Period</span>

@@ -143,7 +143,7 @@ export default function NftStake(){
                             WALLET
                         </div>
                         <div className='main-panel-header-value'>
-                            <span className='main-panel-header-amount'>{ownedTokenAmount}</span> $RAT
+                            <span className='main-panel-header-amount'>{ownedTokenAmount}</span> $FOOD
                         </div>
                     </div>
                     <div className='main-panel-content'>
@@ -215,7 +215,7 @@ export default function NftStake(){
                             EARNED
                         </div>
                         <div className='main-panel-header-value'>
-                            <span className='main-panel-header-amount'>{totalRewardAmount}</span> $RAT
+                            <span className='main-panel-header-amount'>{totalRewardAmount}</span> $FOOD
                         </div>
                     </div>
                     <div className='main-panel-content'>
