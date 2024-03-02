@@ -3,11 +3,15 @@ import { useState, useEffect } from 'react';
 import { useWallet } from "@solana/wallet-adapter-react"
 import { useProgram } from "../utils/useProgram"
 
-import BACKGROUND from '../assets/images/background.png'
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui"
 import { InfoStaking, openNotification } from '../utils/constants';
 
 import { Button} from '@mui/material';
+
+import BACKGROUND from '../assets/images/background.png'
+import TWITTER_IMG_Light from '../assets/images/twitter.png'
+import DISCORD_IMG from '../assets/images/discord.png'
+import TENSOR_IMG from '../assets/images/tensor.png'
 
 export default function AdminPage(){
     const {getPoolData, updatePoolProperties} = useProgram()
@@ -89,9 +93,11 @@ export default function AdminPage(){
             </div>
         </div>
         <div className='footer'>
+            <div>Saga Rats Alpha @2024 All Rights Reserved </div>
             <div>
-                <p>@2024, Saga Rat</p>
-                <p>All rights reserved</p>
+                <a href="https://twitter.com/sagarats24" target="_blank"><img className="twitter-link" src={TWITTER_IMG_Light} width="32px" alt="Twitter"></img></a>
+                <a href="https://discord.com/invite/6jXEEye3Y4" target="_blank"><img className="twitter-link" src={DISCORD_IMG} width="32px" alt="Twitter"></img></a>
+                <a href="https://www.tensor.trade/trade/saga_rats_alpha" target="_blank"><img className="twitter-link" src={TENSOR_IMG} width="32px" alt="Twitter"></img></a>
             </div>
         </div>
     </div>

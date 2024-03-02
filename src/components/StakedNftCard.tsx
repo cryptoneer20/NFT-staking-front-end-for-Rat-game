@@ -24,6 +24,6 @@ export default function StakedNftCard(props : any){
                 <p style={{color : "#e9ffc5"}}>{nftDetailInfo.name + (props.lockStatus ? "   :   Locked" : props.data.stakingData.lockStatus > 0 ? " : Once locked before" : "")}</p>
             </>
         }
-        <p style={{color : "#e9ffc5"}}>$RAT | {props.rewardAmount}</p>
+        <p style={{color : "#e9ffc5"}}>$FOOD | {props.rewardAmount}</p>
     </div>
 }

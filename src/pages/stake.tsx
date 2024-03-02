@@ -124,8 +124,14 @@ export default function NftStake(){
         </div>
         <div className='back-group'>
             <div className='main-logo'>
-                <div className="pad"/>
                 <div className='wallet-position'><WalletMultiButton></WalletMultiButton></div>
+            </div>
+            <div className='community-header'>
+                <div>
+                    <a href="https://twitter.com/sagarats24" target="_blank"><img className="twitter-link" src={TWITTER_IMG_Light} width="40px" alt="Twitter"></img></a>
+                    <a href="https://discord.com/invite/6jXEEye3Y4" target="_blank"><img className="twitter-link" src={DISCORD_IMG} width="40px" alt="Twitter"></img></a>
+                    <a href="https://www.tensor.trade/trade/saga_rats_alpha" target="_blank"><img className="twitter-link" src={TENSOR_IMG} width="40px" alt="Twitter"></img></a>
+                </div>
             </div>
             <div className='penguin-title'>
                 <h1 className="title">SAGA RATS ALPHA</h1>
