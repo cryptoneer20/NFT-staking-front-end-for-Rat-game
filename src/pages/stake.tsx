@@ -7,6 +7,10 @@ import StakedNftCard from "../components/StakedNftCard"
 import { CircularProgress } from '@mui/material';
 
 import BACKGROUND from '../assets/images/background.png'
+import TWITTER_IMG_Light from '../assets/images/twitter.png'
+import DISCORD_IMG from '../assets/images/discord.png'
+import TENSOR_IMG from '../assets/images/tensor.png'
+
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui"
 import { PublicKey } from "@solana/web3.js"
 
@@ -120,12 +124,16 @@ export default function NftStake(){
         </div>
         <div className='back-group'>
             <div className='main-logo'>
-                <div style={{height: "100px"}}/>
+                <div className="pad"/>
                 <div className='wallet-position'><WalletMultiButton></WalletMultiButton></div>
+            </div>
+            <div className='penguin-title'>
+                <h1 className="title">SAGA RATS</h1>
+                <p className="description">Connect your wallet. Select the saga rats that you want to be staked. Click "STAKE" in other to stake the selected ones or "STAKE ALL" if you don't want to bother. That's it now you are earning some valuable $RAT!!!</p>
             </div>
             <div className='progress'>
                 <div className="progress-bar" role="progressbar"  aria-valuemin={0} aria-valuemax={100} style={{width: (100*(poolData==null ? 0 : poolData.totalNumber)/InfoStaking.totalSupply)+"%", fontFamily:"Arial"}}>
-                    {(poolData==null ? 0 : poolData.totalNumber)+"/"+InfoStaking.totalSupply}
+                    {(100*(poolData==null ? 0 : poolData.totalNumber)/InfoStaking.totalSupply)+"% staked"}
                 </div>
             </div>
             <div className='row'>
@@ -169,7 +177,7 @@ export default function NftStake(){
                                 try{
                                     let items = ownedNfts.filter(function(item){return item.selected==true})
                                     if(items.length==0){
-                                        openNotification('warning', "You didn't select any NFT(s)")
+                                        openNotification('warning', "You didn't select any NFT(s) to stake")
                                         return;
                                     }
                                     await stakeNfts(items)
@@ -186,7 +194,7 @@ export default function NftStake(){
                             <button className='btn btn-stake-all' onClick={async()=>{
                                 try{
                                     if(ownedNfts.length==0){
-                                        openNotification('warning', "You don't have NFTs you can stake")
+                                        openNotification('warning', "You don't have any NFTs you can stake")
                                         return;
                                     }
                                     await stakeNfts(ownedNfts)
@@ -242,7 +250,7 @@ export default function NftStake(){
                                     let currentTime = new Date().getTime() / 1000
                                     let items = stakedNfts.filter(function(item){return item.selected==true && !(item.stakingData.lockStatus==1 && item.stakingData.lockTime.toNumber()+poolData.lockDuration>currentTime)})
                                     if(items.length==0){
-                                        openNotification('warning', "You didn't select correct NFT(s) to unstake")
+                                        openNotification('warning', "You didn't select any NFT(s) to unstake")
                                         return
                                     }
                                     await unstakeNfts(items)
@@ -261,7 +269,7 @@ export default function NftStake(){
                                     let currentTime = new Date().getTime() / 1000
                                     let items = stakedNfts.filter(function(item){return !(item.stakingData.lockStatus==1 && item.stakingData.lockTime.toNumber()+poolData.lockDuration>currentTime)})
                                     if(items.length==0){
-                                        openNotification('warning', "You don't have correct NFT(s) you can unstake")
+                                        openNotification('warning', "You don't have any NFT(s) to unstake")
                                         return;
                                     }
                                     await unstakeNfts(items)
@@ -278,7 +286,7 @@ export default function NftStake(){
                             <button className='btn btn-claim' onClick={async()=>{
                                 try{
                                     if(stakedNfts.length==0){
-                                        openNotification('warning', "You don't have staked NFTs")
+                                        openNotification('warning', "You don't have any staked NFTs")
                                         return
                                     }
                                     await claim(stakedNfts)
@@ -297,7 +305,7 @@ export default function NftStake(){
                                 try{
                                     let items = stakedNfts.filter(function(item){return item.selected==true && item.stakingData.lockStatus==0})
                                     if(items.length==0){
-                                        openNotification('warning', "You didn't select correct NFT(s) to lock")
+                                        openNotification('warning', "You didn't select any NFT(s) to lock")
                                         return;
                                     }
                                     await lockNfts(items)
@@ -314,15 +322,15 @@ export default function NftStake(){
                                 try{
                                     let items = stakedNfts.filter(function(item){return item.stakingData.lockStatus==0})
                                     if(items.length==0){
-                                        openNotification('warning', "You don't have correct NFT(s) you can lock")
+                                        openNotification('warning', "You don't have any NFT(s) you can lock")
                                         return;
                                     }
                                     await lockNfts(items)
-                                    openNotification('success', 'Unstake success')
+                                    openNotification('success', 'Lock success')
                                     await getPoolData()
                                     getStakedNfts()
                                 }catch(err){
-                                    openNotification('error', 'Unstake failed')
+                                    openNotification('error', 'Lock failed')
                                 }
                             }}>LOCK ALL</button>
                         </div>
@@ -331,9 +339,11 @@ export default function NftStake(){
             </div>
         </div>
         <div className='footer'>
+            <div>Saga Rats @2024 All Rights Reserved </div>
             <div>
-                <p>@2024, Saga Rat</p>
-                <p>All rights reserved</p>
+                <a href="https://twitter.com/sagarats24" target="_blank"><img className="twitter-link" src={TWITTER_IMG_Light} width="32px" alt="Twitter"></img></a>
+                <a href="https://discord.com/invite/6jXEEye3Y4" target="_blank"><img className="twitter-link" src={DISCORD_IMG} width="32px" alt="Twitter"></img></a>
+                <a href="https://www.tensor.trade/trade/saga_rats_alpha" target="_blank"><img className="twitter-link" src={TENSOR_IMG} width="32px" alt="Twitter"></img></a>
             </div>
         </div>
     </div>

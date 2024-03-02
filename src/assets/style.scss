@@ -9,6 +9,19 @@ body{
     font-family: SugarBomb !important;
     // background-image : url("./images/background.png");
     // background-blend-mode: saturation;
+
+    &::-webkit-scrollbar{
+		width : 4px;
+	}
+
+	&::-webkit-scrollbar-track{
+		background-color: #e4e4e4;
+		border-radius: 100px;
+	}
+
+	&::-webkit-scrollbar-thumb {
+		background-color: #555;
+	}
 }
 
 .main-background{
@@ -41,6 +54,12 @@ body{
         text-align: center;
         padding-bottom: 20px;
         position: relative;
+        height: 100px;
+        .pad{
+            @media (max-width: 786px) {
+                height: 20px;
+            }
+        }
 
         .wallet-position{
             position : absolute;
@@ -56,17 +75,26 @@ body{
     }
 
     .penguin-title{
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
         .title{
             font-size : 40px;
             font-weight: bold;
-            color : rgb(87, 22, 22);
+            color : rgb(9, 235, 96);
+
+            @media (max-width : 800px) {
+                font-size: 30px;
+            }
         }
-        .hiteye{
-            img{
-                height : 60px;
+        .description{
+            font-size : 24px;
+            font-family: 'Courier New', Courier, monospace;
+            color : rgb(161, 196, 33);
+
+            @media (max-width : 1200px) {
+                font-size: 20px;
+            }
+
+            @media (max-width : 800px) {
+                font-size: 16px;
             }
         }
     }
@@ -81,17 +109,18 @@ body{
     
     .progress{
         margin-bottom : 40px;
-        height : 30px;
+        height : 15px;
         border-width: 0;
-        border-radius: 15px;
+        border-radius: 7px;
         color :rgb(87, 22, 22);
         font-size : 18px;
         font-weight: bold;
 
         .progress-bar{
             border-width: 0;
-            border-radius: 15px;
-            background-image: linear-gradient(to right, #b47524 , #711a2e);
+            border-radius: 7px;
+            color: rgb(185, 204, 13);
+            background-image: linear-gradient(to right, rgb(40, 75, 192), rgb(0,148,71));
         }
     }
 
@@ -283,7 +312,27 @@ body{
     align-items: center;
     padding-left: 30px;
     color : #ded0ae;
-    font-size: 14px;
+}
+
+.footer{
+	margin : 0px;
+	height : 80px;
+	font-size : 18px;
+	line-height: 20px;
+	font-family: "FuturaPT" !important;
+	padding : 0 32px;
+
+	display : flex;
+	justify-content: space-between;
+	align-items: center;
+
+	.twitter-link{
+		cursor : pointer
+	}
+
+    a{
+        margin: 4px;
+    }
 }
 
 .disclaimer-panel{
