@@ -17,8 +17,8 @@ import 'antd/dist/reset.css';
 import './assets/style.scss'
 
 function App() {
-  const network = WalletAdapterNetwork.Devnet
-  const endpoint = clusterApiUrl('devnet')
+  const network = WalletAdapterNetwork.Mainnet
+  const endpoint = 'https://polished-rough-dew.solana-mainnet.quiknode.pro/cf78c5a86554e65058b0b3d1ef41c6d4b33cad7a/'
   const wallets = useMemo(() => [
     new PhantomWalletAdapter(),
     new SolflareWalletAdapter({ network }),

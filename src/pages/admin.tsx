@@ -12,6 +12,7 @@ import BACKGROUND from '../assets/images/background.png'
 import TWITTER_IMG_Light from '../assets/images/twitter.png'
 import DISCORD_IMG from '../assets/images/discord.png'
 import TENSOR_IMG from '../assets/images/tensor.png'
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 export default function AdminPage(){
     const {getPoolData, updatePoolProperties} = useProgram()
@@ -22,6 +23,7 @@ export default function AdminPage(){
     const [rewardAmount, setRewardAmount] = useState('')
     const [rewardAmountForLock, setRewardAmountForLock] = useState('')
     const [lockDuration, setLockDuration] = useState('')
+    const [feeAmount, setFeeAmount] = useState('')
 
     useEffect(()=>{
         getStakingPoolData()
@@ -33,6 +35,7 @@ export default function AdminPage(){
             setRewardAmount(""+poolData.rewardAmount / 10**InfoStaking.rewardDecimals)
             setRewardAmountForLock(""+poolData.rewardAmountForLock / 10**InfoStaking.rewardDecimals)
             setLockDuration(poolData.lockDuration)
+            setFeeAmount(""+poolData.unstakeFeeAmount / LAMPORTS_PER_SOL)
         }
     }, [poolData])
 
@@ -50,7 +53,6 @@ export default function AdminPage(){
         </div>
         <div className='back-group'>
             <div className='main-logo'>
-                <div style={{height: "100px"}}/>
                 <div className='wallet-position'><WalletMultiButton></WalletMultiButton></div>
             </div>
             <div className="disclaimer-panel">
@@ -79,10 +81,15 @@ export default function AdminPage(){
                     <input name="lock duration"  type="text" className="form-control" onChange={(event)=>{setLockDuration(event.target.value)}} value={lockDuration}/>
                     <span className="input-group-text">sec</span>
                 </div>
+                <div className="input-group mb-1">
+                    <span className="input-group-text">Unstake Fee Amount</span>
+                    <input name="fee amount"  type="text" className="form-control" onChange={(event)=>{setFeeAmount(event.target.value)}} value={feeAmount}/>
+                    <span className="input-group-text">SOL</span>
+                </div>
                 <div className="disclaimer-footer">
                     <Button className="btn-agree" color="success" variant="contained" onClick={async()=>{
                     try{
-                        await updatePoolProperties(Number(rewardPeriod), Number(rewardAmount), Number(rewardAmountForLock), Number(lockDuration))
+                        await updatePoolProperties(Number(rewardPeriod), Number(rewardAmount), Number(rewardAmountForLock), Number(lockDuration), Number(feeAmount))
                         openNotification('success', 'Update success')
                         await getStakingPoolData()
                     }catch(err){
@@ -93,8 +100,8 @@ export default function AdminPage(){
             </div>
         </div>
         <div className='footer'>
-            <div>Saga Rats Alpha @2024 All Rights Reserved </div>
-            <div>
+            <div>Saga Rats Alpha ©2024 All Rights Reserved </div>
+            <div className="community-part">
                 <a href="https://twitter.com/sagarats24" target="_blank"><img className="twitter-link" src={TWITTER_IMG_Light} width="32px" alt="Twitter"></img></a>
                 <a href="https://discord.com/invite/6jXEEye3Y4" target="_blank"><img className="twitter-link" src={DISCORD_IMG} width="32px" alt="Twitter"></img></a>
                 <a href="https://www.tensor.trade/trade/saga_rats_alpha" target="_blank"><img className="twitter-link" src={TENSOR_IMG} width="32px" alt="Twitter"></img></a>

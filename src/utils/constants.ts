@@ -2,13 +2,13 @@ import { ConfirmOptions, PublicKey } from '@solana/web3.js'
 import {notification} from 'antd'
 
 export const InfoStaking = {
-    pool: new PublicKey("5LqZxJ9EEY5GAFyquXvzWh6Y7TJmySnddwQyiWRfyPcy"),
+    pool: new PublicKey("2sAedgPupYBMcLkSzqxftdaZvNJVvLZFKebzCboUBfQ7"),
     programId: new PublicKey("ratnSpwdsporDA6rBDCnZzi5BvuoGhQy6hqzeHc66QE"),
     idl: require('./staking.json'),
-    rewardToken: new PublicKey("6YTEx36MonaAwcaMciu7KAzx1zdUkQBmHrxLTkKMq98C"),
-    rewardDecimals: 9,
-    collection: new PublicKey('drq1T2iYdF37KS8Qgj8xFzULrjMAC6EsFS8sJM9mPGj'),
-    totalSupply: 6,
+    rewardToken: new PublicKey("AzTQkc4V666vfD8k8tqbjdKMJwBzNTeMeZRNfct8CKnQ"),
+    rewardDecimals: 5,
+    collection: new PublicKey('2jG4XWCTC5GXfigeoqJYVKVxL4pxUWRUBdsGKSQHt1Np'),
+    totalSupply: 1999,
 }
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s')

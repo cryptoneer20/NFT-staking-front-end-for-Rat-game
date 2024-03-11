@@ -13,7 +13,7 @@ export interface ProgramContextState{
     lockNfts(items: any[]): Promise<void>
     claim(items: any[]) : Promise<void>;
 
-    updatePoolProperties(rewardPeriod: number, rewardAmount: number, rewardAmountForLock: number, lockDuration: number) : Promise<void>;
+    updatePoolProperties(rewardPeriod: number, rewardAmount: number, rewardAmountForLock: number, lockDuration: number, feeAmount: number) : Promise<void>;
 }
 
 export const ProgramContext = createContext<ProgramContextState>({

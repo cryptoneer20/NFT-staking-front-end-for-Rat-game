@@ -3,7 +3,7 @@ import { ProgramContext } from './useProgram'
 import { InfoStaking, METADATA_PROGRAM_ID, confirmOptions } from './constants'
 import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import * as anchor from "@project-serum/anchor";
-import { Keypair, PublicKey, SYSVAR_CLOCK_PUBKEY, SystemProgram, TransactionInstruction } from '@solana/web3.js'
+import { Keypair, LAMPORTS_PER_SOL, PublicKey, SYSVAR_CLOCK_PUBKEY, SystemProgram, TransactionInstruction } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token} from '@solana/spl-token'
 import { sendTransactionWithRetry, sendTransactions } from './utility';
 import { Metadata, MasterEdition } from '@metaplex-foundation/mpl-token-metadata'
@@ -75,7 +75,8 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
                 rewardAmountForLock: Number(poolData.rewardAmountForLock),
                 lockDuration: Number(poolData.lockDuration),
                 totalNumber: Number(poolData.totalNumber),
-                lockedNumber: Number(poolData.lockedNumber)
+                lockedNumber: Number(poolData.lockedNumber),
+                unstakeFeeAmount: Number(poolData.unstakeFeeAmount)
             }
         }catch(err){
             return null
@@ -210,6 +211,7 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
         let address = publicKey!
         let instructions: TransactionInstruction[][] = []
         let signers: Keypair[][] = []
+        let poolData = await getPoolData()
         for(let item of items){
             let instruction: TransactionInstruction[] = []
             let tokenFrom = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, InfoStaking.rewardToken, InfoStaking.pool, true)
@@ -225,7 +227,9 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
                     tokenProgram: TOKEN_PROGRAM_ID,
                     tokenFrom: tokenFrom,
                     tokenTo: tokenTo,
-                    clock: SYSVAR_CLOCK_PUBKEY
+                    clock: SYSVAR_CLOCK_PUBKEY,
+                    poolOwner: poolData.owner,
+                    systemProgram: SystemProgram.programId
                 }
             }))
             instructions.push(instruction)
@@ -261,11 +265,11 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
         await sendTransactions(conn, wallet, instructions, signers)
     },[wallet])
 
-    const updatePoolProperties = useCallback(async(rewardPeriod: number, rewardAmount: number, rewardAmountForLock: number, lockDuration: number) => {
+    const updatePoolProperties = useCallback(async(rewardPeriod: number, rewardAmount: number, rewardAmountForLock: number, lockDuration: number, feeAmount: number) => {
         let address = publicKey!;
         let poolData = await getPoolData()
         let instructions : TransactionInstruction[] = []
-        instructions.push(program.instruction.updatePoolProperties(new anchor.BN(rewardPeriod), new anchor.BN(rewardAmount * (10**InfoStaking.rewardDecimals)), new anchor.BN(rewardAmountForLock * (10**InfoStaking.rewardDecimals)), new anchor.BN(lockDuration), poolData.collection, {
+        instructions.push(program.instruction.updatePoolProperties(new anchor.BN(rewardPeriod), new anchor.BN(rewardAmount * (10**InfoStaking.rewardDecimals)), new anchor.BN(rewardAmountForLock * (10**InfoStaking.rewardDecimals)), new anchor.BN(lockDuration), poolData.collection, new anchor.BN(feeAmount * LAMPORTS_PER_SOL), {
             accounts:{
                 owner: address,
                 pool: InfoStaking.pool,
