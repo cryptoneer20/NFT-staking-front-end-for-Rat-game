@@ -9,8 +9,13 @@ export default function NftCard(props : any){
     }, [])
 
     const getNftDetailInfo = async() => {
-        let data = (await axios.get(props.data.metadata.uri)).data
-        setNftDetailInfo(data)
+        console.log(props)
+        try{
+            let data = (await axios.get(props.data.metadata.uri)).data
+            setNftDetailInfo(data)
+        }catch(err){
+            setNftDetailInfo(props.data.metadata)
+        }
     }
 
     return <div className='nft' onClick={()=>{props.callbackFunc(props.data.mint)}}>

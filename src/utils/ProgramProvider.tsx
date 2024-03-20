@@ -1,9 +1,9 @@
 import { FC, useCallback, useMemo, ReactNode } from 'react';
 import { ProgramContext } from './useProgram'
-import { InfoStaking, METADATA_PROGRAM_ID, confirmOptions } from './constants'
+import { AUTH_RULES, AUTH_RULES_ID, InfoStaking, METADATA_PROGRAM_ID, confirmOptions } from './constants'
 import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import * as anchor from "@project-serum/anchor";
-import { Keypair, LAMPORTS_PER_SOL, PublicKey, SYSVAR_CLOCK_PUBKEY, SystemProgram, TransactionInstruction } from '@solana/web3.js'
+import { Keypair, LAMPORTS_PER_SOL, PublicKey, SYSVAR_CLOCK_PUBKEY, SYSVAR_INSTRUCTIONS_PUBKEY, SystemProgram, TransactionInstruction } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token} from '@solana/spl-token'
 import { sendTransactionWithRetry, sendTransactions } from './utility';
 import { Metadata, MasterEdition } from '@metaplex-foundation/mpl-token-metadata'
@@ -23,6 +23,14 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
         const program =  new anchor.Program(InfoStaking.idl, InfoStaking.programId, provider)
         return [program]
     },[conn, wallet])
+
+    const findTokenRecordPda = (mint: PublicKey, token: PublicKey) => {
+        return PublicKey.findProgramAddressSync([Buffer.from('metadata'), METADATA_PROGRAM_ID.toBuffer(), mint.toBuffer(), Buffer.from('token_record'), token.toBuffer()], METADATA_PROGRAM_ID)[0]
+    }
+
+    const findAuthRulesPda = (payer: PublicKey) => {
+        return PublicKey.findProgramAddressSync([Buffer.from('rule_set'), payer.toBuffer(), Buffer.from('transfer')], AUTH_RULES_ID)[0]
+    }
 
     const getTokenAmount = async() => {
 		try{
@@ -158,6 +166,9 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
         for(let item of items){
             let instruction: TransactionInstruction[] = []
             let [stakingData, ] = PublicKey.findProgramAddressSync([item.mint.toBuffer(), InfoStaking.pool.toBuffer()], InfoStaking.programId)
+            let toNftAccount = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, item.mint, InfoStaking.pool, true)
+            if(await conn.getAccountInfo(toNftAccount) == null)
+                instruction.push(Token.createAssociatedTokenAccountInstruction(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, item.mint, toNftAccount, InfoStaking.pool, address))
             if((await conn.getAccountInfo(stakingData))==null){
                 instruction.push(program.instruction.initStakingData({
                     accounts:{
@@ -171,14 +182,28 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
                     }
                 }))
             }
+            const ownerTokenRecord = findTokenRecordPda(item.mint, item.account)
+            const destinationTokenRecord = findTokenRecordPda(item.mint, toNftAccount)
             instruction.push(program.instruction.stakeNft({
                 accounts:{
                     staker: address,
                     pool: InfoStaking.pool,
                     stakingData: stakingData,
                     nftAccount: item.account,
+                    toNftAccount: toNftAccount,
                     tokenProgram: TOKEN_PROGRAM_ID,
-                    clock: SYSVAR_CLOCK_PUBKEY
+                    clock: SYSVAR_CLOCK_PUBKEY,
+                    nftMint: item.mint,
+                    metadata: item.metadataAddress,
+                    edition: item.editionAddress,
+                    ownerTokenRecord: ownerTokenRecord,
+                    destinationTokenRecord: destinationTokenRecord,
+                    metadataProgram: METADATA_PROGRAM_ID,
+                    systemProgram: SystemProgram.programId,
+                    sysvarRent: SYSVAR_INSTRUCTIONS_PUBKEY,
+                    ataProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                    authorizationRulesProgram: AUTH_RULES_ID,
+                    authorizationRules: AUTH_RULES,
                 }
             }))
             instructions.push(instruction)
@@ -218,18 +243,37 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
             let tokenTo = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, InfoStaking.rewardToken, address, true)
             if((await conn.getAccountInfo(tokenTo))==null)
                 instruction.push(Token.createAssociatedTokenAccountInstruction(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, InfoStaking.rewardToken, tokenTo, address, address))
+            let toNftAccount = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, item.stakingData.nftMint, address, true)
+            if(await conn.getAccountInfo(toNftAccount)==null)
+                instruction.push(Token.createAssociatedTokenAccountInstruction(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, item.stakingData.nftMint, toNftAccount, address, address))
+            const ownerTokenRecord = findTokenRecordPda(item.stakingData.nftMint, item.stakingData.nftAccount)
+            const destinationTokenRecord = findTokenRecordPda(item.stakingData.nftMint, toNftAccount)
+            const metadata = await Metadata.getPDA(item.stakingData.nftMint)
+            const edition = await MasterEdition.getPDA(item.stakingData.nftMint)
+
             instruction.push(program.instruction.unstakeNft({
                 accounts:{
                     staker: address,
                     pool: InfoStaking.pool,
                     stakingData: item.stakingDataAddress,
                     nftAccount: item.stakingData.nftAccount,
+                    toNftAccount: toNftAccount,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     tokenFrom: tokenFrom,
                     tokenTo: tokenTo,
                     clock: SYSVAR_CLOCK_PUBKEY,
                     poolOwner: poolData.owner,
-                    systemProgram: SystemProgram.programId
+                    systemProgram: SystemProgram.programId,
+                    nftMint: item.stakingData.nftMint,
+                    metadata: metadata,
+                    edition: edition,
+                    ownerTokenRecord: ownerTokenRecord,
+                    destinationTokenRecord: destinationTokenRecord,
+                    metadataProgram: METADATA_PROGRAM_ID,
+                    sysvarRent: SYSVAR_INSTRUCTIONS_PUBKEY,
+                    ataProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                    authorizationRulesProgram: AUTH_RULES_ID,
+                    authorizationRules: AUTH_RULES,
                 }
             }))
             instructions.push(instruction)

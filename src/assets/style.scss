@@ -110,20 +110,23 @@ body{
         line-height: 40px;
         margin-bottom: 20px;
     }
-    
-    .progress{
-        margin-bottom : 40px;
-        height : 15px;
-        border-width: 0;
-        border-radius: 7px;
-        color :rgb(87, 22, 22);
-        font-size : 14px;
-
-        .progress-bar{
+    .progress-panel{
+        text-align: center;
+        font-family: 'Courier New', Courier, monospace;
+        color :rgb(201, 183, 183);
+        .progress{
+            margin-bottom : 40px;
+            height : 15px;
             border-width: 0;
             border-radius: 7px;
-            color: rgb(231, 231, 205);
-            background-image: linear-gradient(to right, rgb(40, 75, 192), rgb(0,148,71));
+            font-size : 14px;
+    
+            .progress-bar{
+                border-width: 0;
+                border-radius: 7px;
+                color: rgb(231, 231, 205);
+                background-image: linear-gradient(to right, rgb(40, 75, 192), rgb(0,148,71));
+            }
         }
     }
 

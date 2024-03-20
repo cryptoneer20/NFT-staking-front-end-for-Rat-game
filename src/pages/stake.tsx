@@ -137,9 +137,11 @@ export default function NftStake(){
                 <h1 className="title">SAGA RATS ALPHA</h1>
                 <p className="description">Connect your wallet. Select the Saga Rats that you want to stake then click "STAKE" to stake it, otherwise, click "STAKE ALL" to stake all at once. And you can lock your NFTs for a 7 day period to earn triple the $FOOD. That's it! Now you are earning some valuable $FOOD!!!</p>
             </div>
-            <div className='progress'>
-                <div className="progress-bar" role="progressbar"  aria-valuemin={0} aria-valuemax={100} style={{width: (100*(poolData==null ? 0 : poolData.totalNumber)/InfoStaking.totalSupply)+"%", fontFamily:"Arial"}}>
-                    {"Saga Rats Supply "+(100*(poolData==null ? 0 : poolData.totalNumber)/InfoStaking.totalSupply)+"% staked"}
+            <div className="progress-panel">
+                {"Saga Rats Supply "+(Math.floor(1000*(poolData==null ? 0 : poolData.totalNumber)/InfoStaking.totalSupply)/10)+"% staked"}
+                <div className='progress'>
+                    <div className="progress-bar" role="progressbar"  aria-valuemin={0} aria-valuemax={100} style={{width: (100*(poolData==null ? 0 : poolData.totalNumber)/InfoStaking.totalSupply)+"%", fontFamily:"Arial"}}>
+                    </div>
                 </div>
             </div>
             <div className='row'>
@@ -265,6 +267,7 @@ export default function NftStake(){
                                     getOwnedNfts()
                                     getStakedNfts()
                                 }catch(err){
+                                    console.log(err)
                                     openNotification('error', 'Unstake failed')
                                 }
                             }}>Unstake</button>
