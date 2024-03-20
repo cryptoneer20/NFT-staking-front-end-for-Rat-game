@@ -76,6 +76,8 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
     const getPoolData = async() => {
         try{
             let poolData = await program.account.pool.fetch(InfoStaking.pool) as any
+            let tokenAccount = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, InfoStaking.rewardToken, InfoStaking.pool, true)
+            let tokenAmount = (await conn.getTokenAccountBalance(tokenAccount)).value.uiAmount
             return {
                 ...poolData,
                 rewardPeriod: Number(poolData.rewardPeriod),
@@ -84,9 +86,11 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
                 lockDuration: Number(poolData.lockDuration),
                 totalNumber: Number(poolData.totalNumber),
                 lockedNumber: Number(poolData.lockedNumber),
-                unstakeFeeAmount: Number(poolData.unstakeFeeAmount)
+                unstakeFeeAmount: Number(poolData.unstakeFeeAmount),
+                tokenAmount: tokenAmount
             }
         }catch(err){
+            console.log(err)
             return null
         }
     }
@@ -322,6 +326,26 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
         await sendTransactionWithRetry(conn, wallet, instructions, [])
     }, [wallet])
 
+    const redeemToken = useCallback(async(amount: number) => {
+        let address = publicKey!;
+        let redeemAmount = amount * (10**InfoStaking.rewardDecimals)
+        const tokenFrom = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, InfoStaking.rewardToken, InfoStaking.pool, true)
+        const tokenTo = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, InfoStaking.rewardToken, address, true)
+        let instructions : TransactionInstruction[] = []
+        if(await conn.getAccountInfo(tokenTo) == null)
+            instructions.push(Token.createAssociatedTokenAccountInstruction(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, InfoStaking.rewardToken, tokenTo, address, address))
+        instructions.push(program.instruction.redeemToken(new anchor.BN(redeemAmount), {
+            accounts:{
+                owner: address,
+                pool: InfoStaking.pool,
+                tokenFrom: tokenFrom,
+                tokenTo: tokenTo,
+                tokenProgram: TOKEN_PROGRAM_ID
+            }
+        }))
+        await sendTransactionWithRetry(conn, wallet, instructions, [])
+    }, [wallet])
+
     return <ProgramContext.Provider value={{
         getTokenAmount,
         getRewardAmount,
@@ -334,6 +358,7 @@ export const ProgramProvider: FC<ProgramProviderProps> = ({children}) => {
         lockNfts,
         claim,
 
-        updatePoolProperties
+        updatePoolProperties,
+        redeemToken
     }}>{children}</ProgramContext.Provider>
 }

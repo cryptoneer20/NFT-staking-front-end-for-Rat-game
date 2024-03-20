@@ -377,71 +377,79 @@ body{
 
 .disclaimer-panel{
 	text-align: center;
-	outline: none !important;
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	width: 800px;
-	background: black;
-	padding: 20px;
-	border-radius: 20px;
-	// z-index: 1000;
+    display: flex;
+    width: 100%;
+    justify-content: center;
 
-	@media (max-width: 840px) {
-		width: 80%;
-	}
+    .disclaimer-content{
+        max-width: 800px;
 
-	&:focus-visible{
-		outline: none;
-	}
+        &:focus-visible{
+            outline: none;
+        }
+    
+        h2{
+            text-align: center;
+            font-size: 30px;
+            color: #53fdca;
+            text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+        }
+    
+        p{
+            font-family: 'Courier New', Courier, monospace;
+            max-height: 40vh;
+            overflow-y: auto;
+            padding: 0 8px;
+            color: #d5d5df;
+            font-size: 20px;
+    
+            &::-webkit-scrollbar{
+                width : 4px;
+            }
+        
+            &::-webkit-scrollbar-track{
+                background-color: #e4e4e4;
+                border-radius: 4px;
+            }
+        
+            &::-webkit-scrollbar-thumb {
+                background-color: #d5d5df;
+                border-radius: 4px;
+            }
+        }
+    
+        input{
+            text-align: right;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 30px;
+            font-weight: bold;
+            min-width: 100px;
+        }
+    
+        span{
+            font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
+        }
+    
+        .btn-agree{
+            margin-top: 20px;
+            width: 180px;
+            border-radius: 0.8rem;
+            font-size: 20px;
+            color: white
+        }
 
-	h2{
-		text-align: center;
-		font-size: 30px;
-		color: #53fdca;
-		text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
-	}
-
-	p{
-        font-family: 'Courier New', Courier, monospace;
-		max-height: 40vh;
-		overflow-y: auto;
-		padding: 0 8px;
-        color: #d5d5df;
-        font-size: 20px;
-
-		&::-webkit-scrollbar{
-			width : 4px;
-		}
-	
-		&::-webkit-scrollbar-track{
-			background-color: #e4e4e4;
-			border-radius: 4px;
-		}
-	
-		&::-webkit-scrollbar-thumb {
-			background-color: #d5d5df;
-			border-radius: 4px;
-		}
-	}
-
-    input{
-        text-align: right;
-        font-family: 'Courier New', Courier, monospace;
-        font-size: 30px;
-        font-weight: bold;
+        @media (max-width: 512px) {
+            p{
+                font-size: 14px;
+            }
+            input{
+                font-size: 20px;
+            }
+            span{
+                font-size: 12px;
+            }
+        }
     }
 
-    span{
-        font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
-    }
 
-	.btn-agree{
-		margin-top: 20px;
-		width: 180px;
-		border-radius: 0.8rem;
-		font-size: 20px;
-		color: white
-	}
 }

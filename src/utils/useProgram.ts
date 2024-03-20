@@ -14,6 +14,7 @@ export interface ProgramContextState{
     claim(items: any[]) : Promise<void>;
 
     updatePoolProperties(rewardPeriod: number, rewardAmount: number, rewardAmountForLock: number, lockDuration: number, feeAmount: number) : Promise<void>;
+    redeemToken(amount: number) : Promise<void>;
 }
 
 export const ProgramContext = createContext<ProgramContextState>({
